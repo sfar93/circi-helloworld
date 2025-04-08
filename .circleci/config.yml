@@ -1,22 +1,97 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/configuration-reference
-version: 2.1
 # Make sure to add MONGODB_URI to ENVIRONMENT VARIABLES in CircleCI so that the tests can connect to the database
 orbs:
   cypress: cypress-io/cypress@3.3.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  hello-world-job:
-    docker:
-      - image: cimg/base:current
-    steps:
-      - run: echo "Hello, World!"
+  start-server:
+        docker:
+          - image: cypress/base:latest
+        steps:
+          - checkout
+          - run:
+              name: Install dependencies
+              command: npm install
+          - run:
+              name: Build the app
+              command: npm run build
 
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  hello-world-workflow:
+  run-tests:
     jobs:
-      - hello-world-job
+      - start-server
+      # TODO: Add a new job to run the component tests
+
+      - cypress/run:
+          name: Run Cypress Tests
+          requires:
+            - start-server
+          filters:
+            branches:
+              only: master
+          steps:
+            - checkout
+            - run:
+                name: Install dependencies
+                command: npm install
+            - run:
+                name: Start the server
+                command: npm start &
+            - cypress/install
+            - cypress/run
+            - run:
+                name: Stop the server
+                command: kill $(jobs -p)
+            - run:
+                name: Run component tests
+                command: npm run test:component
+            - run:
+                name: Run unit tests
+                command: npm run test:unit
+            - run:
+                name: Run integration tests
+                command: npm run test:integration
+            - run:
+                name: Run e2e tests
+                command: npm run test:e2e
+            - run:
+                name: Run performance tests
+                command: npm run test:performance
+            - run:
+                name: Run accessibility tests
+                command: npm run test:a11y
+            - run:
+                name: Run security tests
+                command: npm run test:security
+            - run:
+                name: Run visual regression tests
+                command: npm run test:visual
+            - run:  
+                name: Run smoke tests
+                command: npm run test:smoke
+            - run:
+                name: Run load tests
+                command: npm run test:load
+            - run:
+                name: Run stress tests
+                command: npm run test:stress
+            - run:
+                name: Run end-to-end tests
+                command: npm run test:e2e
+            - run:  
+                name: Run cross-browser tests
+                command: npm run test:cross-browser
+            - run:    
+                name: Run mobile tests
+                command: npm run test:mobile
+            - run:
+                name: Run API tests
+                command: npm run test:api
+            - run:
+                name: Run database tests
+                command: npm run test:database
+            - run:
+                name: Run network tests
+                command: npm run test:network
+            - run:
+                name: Run localization tests
+                command: npm run test:localization          
